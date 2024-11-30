@@ -1,0 +1,3 @@
+C:/SeaBattleDemchenko/cmake-build-debug/CMakeFiles/SeaBattleDemchenko.dir
+C:/SeaBattleDemchenko/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/SeaBattleDemchenko/cmake-build-debug/CMakeFiles/rebuild_cache.dir

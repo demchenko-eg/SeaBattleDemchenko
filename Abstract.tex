@@ -1,0 +1,268 @@
+\documentclass[12pt]{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[ukrainian]{babel}
+\usepackage{geometry}
+\usepackage{titlesec}
+\geometry{top=2cm, bottom=2cm, left=2cm, right=2cm}
+
+\titleformat{\section}{\large\bfseries}{\thesection.}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{1em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection.}{1em}{}
+
+\begin{document}
+
+\section*{Опис програми, алгоритмів та стратегій гри ``Морський бій''}
+
+\hrule
+\section{Загальний опис програми}
+Дана програма реалізує адаптовану версію класичної гри "Морський бій" на мові програмування C++. Для створення графічного інтерфейсу використовується WinAPI, а бібліотека GDI+ забезпечує покращену візуалізацію елементів гри. Основна особливість цієї реалізації — кожен гравець (включно з ботом) має лише один однопалубний корабель, який може переміщуватися після кожного пострілу.
+
+Гра підтримує такі режими:
+\begin{itemize}
+    \item Режим для одного гравця — змагання з ботом на рівнях складності "Легкий" та "Складний".
+    \item Режим для двох гравців — дозволяє двом користувачам змагатися один з одним.
+\end{itemize}
+
+Основна мета гри — знайти та знищити однопалубний корабель супротивника, одночасно захищаючи власний.
+
+\section{Структура програми}
+\subsection{Підключені бібліотеки}
+\begin{enumerate}
+    \item \texttt{<Windows.h>} і \texttt{<windowsx.h>}:
+    \begin{itemize}
+        \item Для створення віконного інтерфейсу програми за допомогою WinAPI.
+        \item Забезпечують обробку подій, пов’язаних із взаємодією користувача з вікном (наприклад, кліки миші, натискання кнопок).
+    \end{itemize}
+    \item \texttt{<vector>}:
+    \begin{itemize}
+        \item Використовується для створення ігрових полів у вигляді двовимірних векторів (\texttt{std::vector<std::vector<char>>}).
+    \end{itemize}
+    \item \texttt{<cstdlib>} і \texttt{<ctime>}:
+    \begin{itemize}
+        \item \texttt{cstdlib} — для роботи з випадковими числами, використовується при визначенні координат корабля бота.
+        \item \texttt{ctime} — для ініціалізації генератора випадкових чисел.
+    \end{itemize}
+    \item \texttt{<iostream>}:
+    \begin{itemize}
+        \item Використовується для виведення діагностичної інформації в консоль під час розробки (наприклад, для налагодження логіки).
+    \end{itemize}
+    \item \texttt{<set>} і \texttt{<queue>}:
+    \begin{itemize}
+        \item \texttt{std::set} — для зберігання можливих позицій для переміщення чи стрільби бота.
+        \item \texttt{std::queue} — використовується для обробки послідовних подій.
+    \end{itemize}
+    \item \texttt{<gdiplus.h>}:
+    \begin{itemize}
+        \item Бібліотека GDI+ для рендерингу графіки, наприклад, завантаження фонового зображення чи візуалізації ігрового процесу.
+    \end{itemize}
+    \item \texttt{<climits>}:
+    \begin{itemize}
+        \item Для роботи з граничними значеннями чисел, наприклад, \texttt{INT\_MAX} у складному режимі бота.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Опис функцій програми}
+\subsubsection{Ініціалізація гри}
+\begin{itemize}
+    \item \texttt{void initializeBoard(std::vector<std::vector<char>>\& board)}\\
+    Ініціалізує ігрове поле перед початком гри. Заповнює двовимірний вектор \texttt{board} символами \texttt{EMPTY ('-')}, що позначає порожні клітинки.
+    \item \texttt{void startNewGame()}\\
+    Виконує повне скидання стану гри для нового початку:
+    \begin{itemize}
+        \item Очищує поля гравця і бота.
+        \item Розміщує корабель бота на випадковій позиції.
+        \item Скидає всі ігрові змінні (наприклад, \texttt{playerShipPlaced}, \texttt{isPlayerHit}).
+    \end{itemize}
+    \item \texttt{void initializeTwoPlayersGame()}\\
+    Підготовка до гри в режимі двох гравців:
+    \begin{itemize}
+        \item Очищує обидва поля.
+        \item Встановлює черговість ходів, дозволяючи кожному гравцеві розмістити свій корабель.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Графічна візуалізація}
+\begin{itemize}
+    \item \texttt{void drawGrid(HDC hdc,} \\
+    \texttt{const std::vector<std::vector<char>>\& board,} \\
+    \texttt{int startX, int startY, bool hideShips)}
+    \begin{itemize}
+        \item Малює сітку поля на основі двовимірного вектора \texttt{board}.
+        \item Відображає клітинки відповідно до їх стану (порожня, корабель, попадання, промах).
+        \item Для режиму з ботом може приховувати кораблі, якщо встановлено \texttt{hideShips = true}.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Взаємодія з користувачем}
+\begin{itemize}
+    \item \texttt{void handlePlayerPlacement(int x, int y)}
+    \begin{itemize}
+        \item Обробляє вибір клітинки для розміщення корабля гравцем.
+        \item Перевіряє, чи координати \texttt{x, y} відповідають ігровому полю.
+        \item Якщо клітинка порожня, розташовує корабель у вибраній точці.
+    \end{itemize}
+    \item \texttt{void handlePlayerMove(int x, int y)}
+    \begin{itemize}
+        \item Дозволяє гравцеві перемістити свій корабель на сусідню клітинку.
+        \item Перевіряє, чи переміщення можливе (сусідня порожня клітинка).
+        \item Змінює положення корабля у векторі поля.
+    \end{itemize}
+    \item \texttt{void handlePlayerShot(HWND hwnd, int x, int y)}
+    \begin{itemize}
+        \item Реалізує постріл гравця.
+        \item Визначає, чи є попадання, промах або повторна спроба по вже обстріляній клітинці.
+        \item Змінює стан клітинки на \texttt{HIT} або \texttt{MISS}.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Логіка бота}
+\begin{itemize}
+    \item \texttt{void placeBotShip(std::vector<std::vector<char>>\& board)}
+    \begin{itemize}
+        \item Розміщує корабель бота у випадковій порожній клітинці.
+    \end{itemize}
+    \item \texttt{void moveBotShip()}
+    \begin{itemize}
+        \item Переміщує корабель бота на сусідню клітинку.
+        \item У легкому режимі вибирає випадкову клітинку.
+        \item У складному режимі аналізує ризики (обстріляні клітинки) та обирає безпечну позицію.
+    \end{itemize}
+    \item \texttt{void smartBotShot(HWND hwnd)}
+    \begin{itemize}
+        \item Реалізує стрільбу бота в складному режимі.
+        \item Використовує Манхеттенську відстань для визначення найбільш ймовірної позиції корабля гравця.
+        \item Зберігає можливі позиції для наступних пострілів.
+    \end{itemize}
+    \item \texttt{void botShot(HWND hwnd)}
+    \begin{itemize}
+        \item Виконує стрільбу бота.
+        \item У легкому режимі обирає випадкову клітинку.
+        \item У складному режимі викликає \texttt{smartBotShot()}.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Обслуговування гри}
+\begin{itemize}
+    \item \texttt{int calculateManhattanDistance(int x1, int y1, int x2, int y2)}
+    \begin{itemize}
+        \item Розраховує Манхеттенську відстань між двома точками \texttt{(x1, y1)} та \texttt{(x2, y2)}.
+        \item Використовується ботом для оцінки ймовірності попадання.
+    \end{itemize}
+    \item \texttt{void showDistance(int distance, int startX, int startY)}
+    \begin{itemize}
+        \item Виводить текстову інформацію про відстань до корабля противника.
+    \end{itemize}
+    \item \texttt{void updatePossiblePositions(int distance, int shotX, int shotY)}
+    \begin{itemize}
+        \item Оновлює список можливих позицій корабля гравця після пострілу бота.
+        \item Враховує Манхеттенську відстань для уточнення позицій.
+    \end{itemize}
+    \item \texttt{void StartEndGameTimer(HWND hwnd, bool playerWon, bool isTwoPlayersMode)}
+    \begin{itemize}
+        \item Запускає таймер для завершення гри.
+        \item Виводить відповідне повідомлення про переможця.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Управління інтерфейсом}
+\begin{itemize}
+    \item \texttt{void createStartButton(HWND hwnd)}
+    \begin{itemize}
+        \item Створює кнопки для вибору режиму гри, початку нової гри або виходу з програми.
+    \end{itemize}
+    \item \texttt{void hideButtons()}
+    \begin{itemize}
+        \item Видаляє всі кнопки з екрана після початку гри.
+    \end{itemize}
+    \item \texttt{LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, \\
+        WPARAM wParam, LPARAM lParam)}
+    \begin{itemize}
+    
+        \item Головна функція обробки подій.
+        \item Реагує на кліки миші, натискання кнопок та завершення гри.
+        \item Відповідає за відображення вікна і перерисовку графіки.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Точка входу}
+\begin{itemize}
+    \item \texttt{int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,} \\
+    \texttt{LPSTR lpCmdLine, int nCmdShow)}
+    \begin{itemize}
+    
+        \item Головна функція програми.
+        \item Ініціалізує середовище \texttt{GDI+}, запускає вікно та основний цикл повідомлень Windows.
+        \item Викликає функції для запуску нової гри, відображення елементів інтерфейсу та завершення програми.
+    \end{itemize}
+\end{itemize}
+
+\section{Механіка гри та алгоритми}
+\subsection{Розміщення кораблів}
+\begin{itemize}
+    \item Гравці розміщують свій корабель вручну, натискаючи на клітинки поля.
+    \item Бот розташовує свій корабель випадковим чином на порожній клітинці.
+\end{itemize}
+
+\subsection{Стрільба}
+\begin{itemize}
+    \item Гравець:
+    \begin{itemize}
+        \item Натискає на клітинку поля супротивника, щоб здійснити постріл.
+        \item Попадання: Клітинка позначається як \texttt{HIT}.
+        \item Промах: Клітинка позначається як \texttt{MISS}.
+    \end{itemize}
+    \item Бот:
+    \begin{itemize}
+        \item Легкий рівень: Бот стріляє у випадкову клітинку, яка ще не була обстріляна.
+        \item Складний рівень: Бот аналізує ймовірні позиції корабля гравця за допомогою Манхеттенської відстані та стріляє в оптимальну клітинку.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Переміщення кораблів}
+Після кожного невлучного пострілу кораблі можуть переміститися:
+\begin{itemize}
+    \item Гравець: Вибирає сусідню клітинку або залишається на місці.
+    \item Бот:
+    \begin{itemize}
+        \item Легкий рівень: Випадковий вибір сусідньої клітинки.
+        \item Складний рівень: Аналіз ризиків обстрілу з боку гравця. Бот вибирає клітинку з мінімальним ризиком.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Завершення гри}
+Гра завершується, коли корабель одного з гравців знищено. Програма виводить повідомлення про переможця та пропонує розпочати нову гру.
+
+\section{Стратегії гри}
+\subsection{Стратегії для гравців}
+\begin{enumerate}
+    \item \textbf{Розташування корабля:}
+    \begin{itemize}
+        \item Вибирайте позиції ближче до центру поля для більшої свободи руху.
+        \item Уникайте розміщення поблизу країв, щоб зменшити ймовірність блокування руху. \hspace{0pt} \\
+    \end{itemize}
+    \item \textbf{Атака:}
+    \begin{itemize}
+        \item Починайте стрільбу з центральних або кутових зон, щоб швидше звузити область пошуку.
+    \end{itemize}
+    \item \textbf{Переміщення:}
+    \begin{itemize}
+        \item Уникайте передбачуваних маршрутів переміщення.
+        \item Переміщуйте корабель у зони, де супротивнику складніше спрогнозувати наступний постріл.
+    \end{itemize}
+\end{enumerate}
+
+\section{Особливості гри}
+\begin{enumerate}
+    \item \textbf{Ігрова динаміка:} \\
+    Кораблі можуть переміщуватися після кожного пострілу, що додає варіативності та ускладнює тактичну гру.
+    \item \textbf{Манхеттенська відстань:} \\
+    У складному режимі бот використовує цей показник для аналізу та прогнозування позицій корабля гравця.
+    \item \textbf{Симетрія можливостей:} \\
+    І гравець, і бот мають однакові можливості для руху та стрільби, забезпечуючи баланс.
+\end{enumerate}
+
+
+\section{Висновок}
+Реалізація гри "Морський бій" з однопалубними рухомими кораблями є цікавим експериментом, який надає динамічності та унікальності класичній грі. Завдяки простій графіці та адаптованій механіці, програма є зручною для гравців будь-якого рівня підготовки.
+\end{document}
