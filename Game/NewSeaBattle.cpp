@@ -1,10 +1,15 @@
-/* File NewSeaBattleVSCode.cpp
+/* File NewSeaBattle.cpp
 Implementation of a special mode of the Sea Battle game
 Done by Demchenko Yehor (group Computer mathematics 2)
 Date 30.11.2024
 Full implementation of the game Sea Battle
 */
 
+// g++ -std=c++17 NewSeaBattle.cpp -o NewSeaBattle.exe -lgdiplus -lcomdlg32 -lgdi32
+
+
+#define UNICODE
+#define _UNICODE
 
 #include <Windows.h>
 #include <windowsx.h>
@@ -506,7 +511,7 @@ void handleTwoPlayersPlacement(int x, int y, bool isPlayer1) {
                 isPlayer1Turn = true;
                 hideAllShips = true;
                 InvalidateRect(nullptr, nullptr, TRUE);
-                MessageBox(nullptr,"Both players have placed their ships. The game begins!\nPlayer 1's turn.", "Game Start", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(nullptr,"Both players have placed their ships. The game begins!\nPlayer 1's turn.", "Game Start", MB_OK | MB_ICONINFORMATION);
                 hideAllShips = false;
                 InvalidateRect(nullptr, nullptr, TRUE);
             } else {
@@ -612,7 +617,7 @@ void handleTwoPlayersShot(HWND hwnd, int x, int y, bool isPlayer1) {
             hideAllShips = true;
             InvalidateRect(hwnd, nullptr, TRUE);
             const char* message = isPlayer1Turn ? "Player 1's turn! Press OK to continue." : "Player 2's turn! Press OK to continue.";
-            MessageBox(hwnd, message, "Turn Change", MB_OK | MB_ICONINFORMATION);
+            MessageBoxA(hwnd, message, "Turn Change", MB_OK | MB_ICONINFORMATION);
             hideAllShips = false;
             playerTurnConfirmed = true;
             isPlayer1Turn = !isPlayer1Turn;
@@ -622,10 +627,10 @@ void handleTwoPlayersShot(HWND hwnd, int x, int y, bool isPlayer1) {
 }
 
 void createStartButton(HWND hwnd) {
-    randomBot = CreateWindow("BUTTON", "Easy Mode", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 200, 130, 30, hwnd, (HMENU)3, GetModuleHandle(nullptr), nullptr);
-    hardBot = CreateWindow("BUTTON", "Hard mode", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 240, 130, 30, hwnd, (HMENU)4, GetModuleHandle(nullptr), nullptr);
-    twoPlayers = CreateWindow("BUTTON", "2 players mode", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 280, 130, 30, hwnd, (HMENU)5, GetModuleHandle(nullptr), nullptr);
-    exit_ = CreateWindow("BUTTON", "Exit", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 320, 130, 30, hwnd, (HMENU)6, GetModuleHandle(nullptr), nullptr);
+    randomBot = CreateWindowA("BUTTON", "Easy Mode", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 200, 130, 30, hwnd, (HMENU)3, GetModuleHandle(nullptr), nullptr);
+    hardBot = CreateWindowA("BUTTON", "Hard mode", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 240, 130, 30, hwnd, (HMENU)4, GetModuleHandle(nullptr), nullptr);
+    twoPlayers = CreateWindowA("BUTTON", "2 players mode", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 280, 130, 30, hwnd, (HMENU)5, GetModuleHandle(nullptr), nullptr);
+    exit_ = CreateWindowA("BUTTON", "Exit", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 320, 130, 30, hwnd, (HMENU)6, GetModuleHandle(nullptr), nullptr);
 }
 
 void hideButtons() {
@@ -657,11 +662,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             backgroundImage = Gdiplus::Image::FromFile(L"background1.bmp");
             gameBackgroundImage = Gdiplus::Image::FromFile(L"background2.bmp");
             if (!backgroundImage || backgroundImage->GetLastStatus() != Gdiplus::Ok) {
-                MessageBox(hwnd, "Failed to load background image.", "Error", MB_OK | MB_ICONERROR);
+                MessageBoxA(hwnd, "Failed to load background image.", "Error", MB_OK | MB_ICONERROR);
                 backgroundImage = nullptr;
             }
             if (!gameBackgroundImage || gameBackgroundImage->GetLastStatus() != Gdiplus::Ok) {
-                MessageBox(hwnd, "Failed to load game background image.", "Error", MB_OK | MB_ICONERROR);
+                MessageBoxA(hwnd, "Failed to load game background image.", "Error", MB_OK | MB_ICONERROR);
                 gameBackgroundImage = nullptr;
             }
             GetClientRect(hwnd, &clientRect);
@@ -765,14 +770,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
                 case 1: {
-                    if (MessageBox(hwnd, "Are you sure? The current game will be lost.", "Confirm New Game", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                    if (MessageBoxA(hwnd, "Are you sure? The current game will be lost.", "Confirm New Game", MB_YESNO | MB_ICONQUESTION) == IDYES) {
                         startNewGame();
                         InvalidateRect(hwnd, nullptr, TRUE);
                     }
                     break;
                 }
                 case 2: {
-                    if (MessageBox(hwnd, "Return to the main menu?", "Confirm Exit", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                    if (MessageBoxA(hwnd, "Return to the main menu?", "Confirm Exit", MB_YESNO | MB_ICONQUESTION) == IDYES) {
                         lastDistance = -1;
                         lastDistancePlayer1 = -1;
                         lastDistancePlayer2 = -1;
@@ -789,8 +794,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     gameStarted = true;
                     startNewGame();
                     hideButtons();
-                    newGame = CreateWindow("BUTTON", "New game", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 710, 50, 100, 30, hwnd, (HMENU)1, nullptr, nullptr);
-                    mainMenu = CreateWindow("BUTTON", "Exit", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 820, 50, 100, 30, hwnd, (HMENU)2, nullptr, nullptr);
+                    newGame = CreateWindowA("BUTTON", "New game", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 710, 50, 100, 30, hwnd, (HMENU)1, nullptr, nullptr);
+                    mainMenu = CreateWindowA("BUTTON", "Exit", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 820, 50, 100, 30, hwnd, (HMENU)2, nullptr, nullptr);
                     InvalidateRect(hwnd, nullptr, TRUE);
                     break;
                 case 4:
@@ -798,8 +803,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     isHardMode = true;
                     startNewGame();
                     hideButtons();
-                    newGame = CreateWindow("BUTTON", "New game", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 710, 50, 100, 30, hwnd, (HMENU)1, nullptr, nullptr);
-                    mainMenu = CreateWindow("BUTTON", "Exit", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 820, 50, 100, 30, hwnd, (HMENU)2, nullptr, nullptr);
+                    newGame = CreateWindowA("BUTTON", "New game", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 710, 50, 100, 30, hwnd, (HMENU)1, nullptr, nullptr);
+                    mainMenu = CreateWindowA("BUTTON", "Exit", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 820, 50, 100, 30, hwnd, (HMENU)2, nullptr, nullptr);
                     InvalidateRect(hwnd, nullptr, TRUE);
                     break;
                 case 5:
@@ -807,8 +812,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     isTwoPlayersMode = true;
                     initializeTwoPlayersGame();
                     hideButtons();
-                    newGame = CreateWindow("BUTTON", "New game", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 710, 50, 100, 30, hwnd, (HMENU)1, nullptr, nullptr);
-                    mainMenu = CreateWindow("BUTTON", "Exit", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 820, 50, 100, 30, hwnd, (HMENU)2, nullptr, nullptr);
+                    newGame = CreateWindowA("BUTTON", "New game", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 710, 50, 100, 30, hwnd, (HMENU)1, nullptr, nullptr);
+                    mainMenu = CreateWindowA("BUTTON", "Exit", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 820, 50, 100, 30, hwnd, (HMENU)2, nullptr, nullptr);
                     InvalidateRect(hwnd, nullptr, TRUE);
                     break;
                 case 6:
@@ -820,7 +825,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_TIMER:
             if (wParam == 1) {
                 KillTimer(hwnd, 1);
-                int result = MessageBox(hwnd, "You won! Start a new game?", "Game Over", MB_YESNO | MB_ICONINFORMATION);
+                int result = MessageBoxA(hwnd, "You won! Start a new game?", "Game Over", MB_YESNO | MB_ICONINFORMATION);
                 if (result == IDYES) {
                     startNewGame();
                     InvalidateRect(hwnd, nullptr, TRUE);
@@ -829,7 +834,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if (wParam == 2) {
                 KillTimer(hwnd, 2);
-                int result = MessageBox(hwnd, "You lost! Start a new game?", "Game Over", MB_YESNO | MB_ICONINFORMATION);
+                int result = MessageBoxA(hwnd, "You lost! Start a new game?", "Game Over", MB_YESNO | MB_ICONINFORMATION);
                 if (result == IDYES) {
                     startNewGame();
                     InvalidateRect(hwnd, nullptr, TRUE);
@@ -838,7 +843,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if (wParam == 3) {
                 KillTimer(hwnd, 3);
-                int result = MessageBox(hwnd, "Player 1 won! Start a new game?", "Game Over", MB_YESNO | MB_ICONINFORMATION);
+                int result = MessageBoxA(hwnd, "Player 1 won! Start a new game?", "Game Over", MB_YESNO | MB_ICONINFORMATION);
                 if (result == IDYES) {
                     startNewGame();
                     InvalidateRect(hwnd, nullptr, TRUE);
@@ -847,7 +852,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if (wParam == 4) {
                 KillTimer(hwnd, 4);
-                int result = MessageBox(hwnd, "Player 2 won! Start a new game?", "Game Over", MB_YESNO | MB_ICONINFORMATION);
+                int result = MessageBoxA(hwnd, "Player 2 won! Start a new game?", "Game Over", MB_YESNO | MB_ICONINFORMATION);
                 if (result == IDYES) {
                     startNewGame();
                     InvalidateRect(hwnd, nullptr, TRUE);
@@ -869,7 +874,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     initializeBoard(playerBoard);
     initializeBoard(botBoard);
     placeBotShip(botBoard);
-    const char CLASS_NAME[] = "SeaBattleWindow";
+    const wchar_t CLASS_NAME[] = L"SeaBattleWindow";
     WNDCLASS wc = {};
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
@@ -878,7 +883,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hwnd = CreateWindowEx(
         0,
         CLASS_NAME,
-        "New SeaBattle",
+        L"New SeaBattle",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 1000, 600,
         nullptr, nullptr, hInstance, nullptr);
