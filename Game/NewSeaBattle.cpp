@@ -72,10 +72,12 @@ HWND hardBot = nullptr;
 HWND twoPlayers = nullptr;
 HWND exit_ = nullptr;
 
+//Creating a game board
 void initializeBoard(std::vector<std::vector<char>>& board) {
     board.assign(BOARD_SIZE, std::vector<char>(BOARD_SIZE, EMPTY));
 }
 
+//The main graphic function of the program
 void drawGrid(HDC hdc, const std::vector<std::vector<char>>& board, int startX, int startY, bool hideShips) {
     SetBkMode(hdc, TRANSPARENT);
     for (int j = 0; j < BOARD_SIZE; ++j) {
@@ -202,10 +204,12 @@ void drawGrid(HDC hdc, const std::vector<std::vector<char>>& board, int startX, 
     }
 }
 
+//Calculation of the Manhattan distance
 int calculateManhattanDistance(int x1, int y1, int x2, int y2) {
     return abs(x1 - x2) + abs(y1 - y2);
 }
 
+//Placement of the player's ship
 void handlePlayerPlacement(int x, int y) {
     if (!playerShipPlaced && x >= playerStartX && x < playerStartX + BOARD_SIZE * CELL_SIZE &&
         y >= playerStartY && y < playerStartY + BOARD_SIZE * CELL_SIZE) {
@@ -221,6 +225,7 @@ void handlePlayerPlacement(int x, int y) {
         }
 }
 
+//Placement of the bot's ship
 void placeBotShip(std::vector<std::vector<char>>& board) {
     do {
         botX = rand() % BOARD_SIZE;
@@ -229,6 +234,7 @@ void placeBotShip(std::vector<std::vector<char>>& board) {
     board[botX][botY] = SHIP;
 }
 
+//Moving the bot ship in hard mode
 void moveBotShipHard() {
     std::vector<std::pair<int, int>> directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
     std::pair<int, int> safestCell = {botX, botY};
@@ -263,6 +269,7 @@ void moveBotShipHard() {
     botBoard[botX][botY] = SHIP;
 }
 
+//Moving the bot ship in easy mode
 void moveBotShip() {
     if (isHardMode) {
         moveBotShipHard();
@@ -287,6 +294,7 @@ void moveBotShip() {
     }
 }
 
+//Launching a new game
 void startNewGame() {
     initializeBoard(playerBoard);
     initializeBoard(botBoard);
@@ -312,6 +320,7 @@ void startNewGame() {
     }
 }
 
+//Launching a new game for 2 players
 void initializeTwoPlayersGame() {
     initializeBoard(playerBoard);
     initializeBoard(botBoard);
@@ -323,6 +332,7 @@ void initializeTwoPlayersGame() {
     playerCanMoveShip = false;
 }
 
+//End game timers
 void StartEndGameTimer(HWND hwnd, bool playerWon, bool isTwoPlayersMode) {
     if (isTwoPlayersMode) {
         SetTimer(hwnd, playerWon ? 3 : 4, 1200, nullptr);
@@ -331,6 +341,7 @@ void StartEndGameTimer(HWND hwnd, bool playerWon, bool isTwoPlayersMode) {
     }
 }
 
+//Updating list of possible player ship positions for bot shooting in hard mode
 void updatePossiblePositions(int distance, int shotX, int shotY) {
     std::set<std::pair<int, int>> newPositions;
     for (int dx = -distance; dx <= distance; ++dx) {
@@ -383,6 +394,7 @@ void updatePossiblePositions(int distance, int shotX, int shotY) {
     }
 }
 
+//Shooting bot in hard mode
 void smartBotShot(HWND hwnd) {
     int row, col;
     if (possiblePositions.empty()) {
@@ -409,6 +421,7 @@ void smartBotShot(HWND hwnd) {
     InvalidateRect(hwnd, nullptr, TRUE);
 }
 
+//Shooting bot in easy mode
 void botShot(HWND hwnd) {
     if (isBotHit) return;
     if (isHardMode) {
@@ -431,6 +444,7 @@ void botShot(HWND hwnd) {
     }
 }
 
+//Saving the Manhattan distance in different modes
 void showDistance(int distance, int startX, int startY) {
     lastDistance = distance;
     distanceX = startX;
@@ -442,6 +456,7 @@ void showDistance(int distance, int startX, int startY) {
     }
 }
 
+//Move the player's ship
 void handlePlayerMove(int x, int y) {
     if (playerShipPlaced && playerCanMoveShip) {
         int col = (x - playerStartX) / CELL_SIZE;
@@ -464,6 +479,7 @@ void handlePlayerMove(int x, int y) {
     }
 }
 
+//Function for player shots
 void handlePlayerShot(HWND hwnd, int x, int y) {
     if (!playerMovedAfterBotShot) return;
     if (playerShipPlaced && x >= botStartX && x < botStartX + BOARD_SIZE * CELL_SIZE &&
@@ -491,6 +507,7 @@ void handlePlayerShot(HWND hwnd, int x, int y) {
         }
 }
 
+//Placement of ships for 2 player mode
 void handleTwoPlayersPlacement(int x, int y, bool isPlayer1) {
     std::vector<std::vector<char>>& currentBoard = isPlayer1 ? playerBoard : botBoard;
     int& currentX = isPlayer1 ? playerX : botX;
@@ -523,6 +540,7 @@ void handleTwoPlayersPlacement(int x, int y, bool isPlayer1) {
     }
 }
 
+//Ship movement for 2 player mode
 void handleTwoPlayersMove(int x, int y, bool isPlayer1) {
     std::vector<std::vector<char>>& currentBoard = isPlayer1 ? playerBoard : botBoard;
     int& currentX = isPlayer1 ? playerX : botX;
@@ -570,6 +588,7 @@ void handleTwoPlayersMove(int x, int y, bool isPlayer1) {
         }
 }
 
+//Shot function for 2 player mode
 void handleTwoPlayersShot(HWND hwnd, int x, int y, bool isPlayer1) {
     if ((isPlayer1 && !player1Moved) || (!isPlayer1 && !player2Moved)) return;
     std::vector<std::vector<char>>& targetBoard = isPlayer1 ? botBoard : playerBoard;
@@ -626,6 +645,7 @@ void handleTwoPlayersShot(HWND hwnd, int x, int y, bool isPlayer1) {
     }
 }
 
+//Creating main menu buttons
 void createStartButton(HWND hwnd) {
     randomBot = CreateWindowA("BUTTON", "Easy Mode", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 200, 130, 30, hwnd, (HMENU)3, GetModuleHandle(nullptr), nullptr);
     hardBot = CreateWindowA("BUTTON", "Hard mode", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 240, 130, 30, hwnd, (HMENU)4, GetModuleHandle(nullptr), nullptr);
@@ -633,6 +653,7 @@ void createStartButton(HWND hwnd) {
     exit_ = CreateWindowA("BUTTON", "Exit", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 420, 320, 130, 30, hwnd, (HMENU)6, GetModuleHandle(nullptr), nullptr);
 }
 
+//Hiding buttons
 void hideButtons() {
     DestroyWindow(randomBot);
     DestroyWindow(hardBot);
@@ -648,6 +669,7 @@ void hideButtons() {
     mainMenu = nullptr;
 }
 
+//Handles the basic logic of the game, interface and user interaction. Combines visualization and resource management
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     static bool gameStarted = false;
     static Gdiplus::Image* backgroundImage = nullptr;
@@ -865,6 +887,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
+//Initialization of the program, creation of the main window and launch of the main message processing cycle
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     SetConsoleOutputCP(CP_UTF8);
     srand(static_cast<unsigned>(time(nullptr)));
